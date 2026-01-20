@@ -28,20 +28,19 @@
           src="https://somosplaneador.cl/wp-content/uploads/2026/01/gati-1.png"
           alt="Logo de app gatito con billetera"
           class="wallet-avatar"
-          referrerpolicy="no-referrer"
-         style="cursor:pointer;">
+              referrerpolicy="no-referrer">
         </a>
 <button class="wallet-icon-btn" type="button"
           data-toggle="collapse" data-target="#walletNav"
           aria-controls="walletNav" aria-expanded="false" aria-label="Abrir menú">
-          <i class="bi bi-list" style="font-size: 1.3rem;"></i>
+          <i class="bi bi-list wallet-icon-lg"></i>
         </button>
       </div>
 
       <div class="text-center">
         <h2 class="wallet-title">Últimos Movimientos</h2>
         <p class="wallet-subtitle">Tu saldo actual</p>
-        <div class="wallet-balance" id="txBalance">-e</div>
+        <div class="wallet-balance" id="transactionsBalance">$0</div>
       </div>
     </header>
 
@@ -71,25 +70,25 @@
 
       <div class="mb-3 d-flex align-items-center justify-content-between">
         <span class="wallet-chip">Movimientos</span>
-        <small class="text-muted">(se guardan en tu navegador)</small>
+        
       </div>
 
       <div class="form-group">
-        <label for="txFilter" class="font-weight-bold">Filtrar por tipo</label>
-        <select id="txFilter" class="form-control">
+        <label for="filterType" class="font-weight-bold">Filtrar por tipo</label>
+        <select id="filterType" class="form-control">
           <option value="all" selected>Todos</option>
-          <option value="purchase">Compra</option>
+          <option value="buy">Compra</option>
           <option value="deposit">Depósito</option>
-          <option value="transfer_in">Transferencia recibida</option>
-          <option value="transfer_out">Transferencia enviada</option>
+          <option value="receive">Transferencia recibida</option>
+          <option value="send">Transferencia enviada</option>
         </select>
       </div>
 
-      <div id="txEmpty" class="text-muted" style="display:none;">No hay movimientos aún.</div>
+      <div id="transactionsEmpty" class="text-muted is-hidden">No hay movimientos aún.</div>
 
-      <ul id="txList" class="list-group mb-4"></ul>
+      <ul id="transactionsList" class="list-group mb-4"></ul>
 
-      <a href="menu.html" class="btn btn-outline-dark btn-block wallet-action" style="border-radius:16px;">
+      <a href="menu.html" class="btn btn-outline-dark btn-block wallet-action">
         <i class="bi bi-chevron-left mr-2"></i> Volver al Menú
       </a>
 

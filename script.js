@@ -1,469 +1,527 @@
-/* Wallet - script.js
-   Requisitos: jQuery + Bootstrap alerts + LocalStorage
-*/
+/* =========================
+   Alke Wallet - script.js
+   (Root file - no subfolders)
+   ========================= */
 
-$(function () {
-  const KEYS = {
-    LOGGED: 'wallet_logged',
-    BALANCE: 'wallet_balance',
-    CONTACTS: 'wallet_contacts',
-    TX: 'wallet_transactions'
-  };
+/* ----------
+   Helpers
+---------- */
+function toNumber(value) {
+  const n = Number(String(value).replace(/[^\d.-]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
 
-  // ---------- Helpers ----------
-  function toInt(v) {
-    const n = parseInt(String(v).replace(/\D/g, ''), 10);
-    return Number.isFinite(n) ? n : 0;
+function formatCLP(value) {
+  const n = Math.max(0, Math.floor(toNumber(value)));
+  return "$" + n.toLocaleString("es-CL");
+}
+
+function getStorageJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
   }
+}
 
-  function formatCLP(n) {
-    try {
-      return new Intl.NumberFormat('es-CL').format(n);
-    } catch (e) {
-      // Fallback simple
-      return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+function setStorageJSON(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function ensureBalance() {
+  const existing = localStorage.getItem("walletBalance");
+  if (existing === null || existing === undefined || existing === "") {
+    localStorage.setItem("walletBalance", String(60000));
+  }
+}
+
+function getBalance() {
+  ensureBalance();
+  return toNumber(localStorage.getItem("walletBalance"));
+}
+
+function setBalance(value) {
+  localStorage.setItem("walletBalance", String(Math.max(0, Math.floor(toNumber(value)))));
+}
+
+function pushTransaction(tx) {
+  const list = getStorageJSON("walletTransactions", []);
+  list.unshift({
+    id: tx.id || Date.now(),
+    type: tx.type || "other",
+    description: tx.description || "",
+    amount: toNumber(tx.amount),
+    date: tx.date || new Date().toISOString(),
+    meta: tx.meta || {}
+  });
+  setStorageJSON("walletTransactions", list);
+}
+
+function showBootstrapAlert(targetEl, message, type = "info") {
+  if (!targetEl) return;
+
+  const html = `
+    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+      ${message}
+      <button type="button" class="close" data-dismiss="alert" aria-label="Cerrar">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  `;
+  targetEl.innerHTML = html;
+}
+
+/* ----------
+   Page routers
+---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  ensureBalance();
+
+  // Logout links (if present)
+  document.querySelectorAll(".js-logout").forEach((a) => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      // For simple demo: just go back to login
+      window.location.href = "login.html";
+    });
+  });
+
+  // Detect page by key element
+  if (document.querySelector(".login-screen")) initLogin();
+  if (document.getElementById("menuBalance")) initMenu();
+  if (document.getElementById("depositBalance")) initDeposit();
+  if (document.getElementById("sendBalance")) initSendMoney();
+  if (document.getElementById("transactionsList")) initTransactions();
+});
+
+/* ----------
+   LOGIN (index.html / login.html)
+---------- */
+function initLogin() {
+  // ✅ Requisito: manejar login con jQuery (selectores + submit)
+  if (!window.jQuery) return;
+
+  const $form = window.jQuery("#loginForm");
+  const $alertArea = window.jQuery("#loginAlert");
+
+  if ($form.length === 0) return;
+
+  $form.submit(function (e) {
+    e.preventDefault();
+
+    const email = (window.jQuery("#email").val() || "").trim();
+    const pass = (window.jQuery("#password").val() || "").trim();
+
+    $alertArea.html("");
+
+    if (!email || !pass) {
+      showBootstrapAlert($alertArea[0], "Completa correo y contraseña.", "danger");
+      return;
     }
+
+    showBootstrapAlert($alertArea[0], "✅ Inicio de sesión exitoso. Redirigiendo...", "success");
+
+    // ✅ Redirigir (puedes cambiar la ruta si tu profe la exige)
+    setTimeout(() => {
+      window.location.href = "menu.html";
+    }, 900);
+  });
+}
+
+/* ----------
+   MENU (menu.html)
+---------- */
+function initMenu() {
+  const balanceEl = document.getElementById("menuBalance");
+  if (balanceEl) balanceEl.textContent = formatCLP(getBalance());
+
+  const alertArea = document.getElementById("menuAlertArea");
+
+  function hookRedirect(buttonId, label, href) {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (alertArea) showBootstrapAlert(alertArea, `Redirigiendo a <b>${label}</b>...`, "info");
+      setTimeout(() => (window.location.href = href), 700);
+    });
   }
 
-  function getBalance() {
-    const raw = localStorage.getItem(KEYS.BALANCE);
-    const n = toInt(raw);
-    return n > 0 ? n : 60000;
-  }
+  // IDs reales en menu.html
+  hookRedirect("btnDeposit", "Depositar", "deposit.html");
+  hookRedirect("btnSend", "Enviar dinero", "sendmoney.html");
+  hookRedirect("btnTx", "Últimos movimientos", "transactions.html");
+}
 
-  function setBalance(n) {
-    localStorage.setItem(KEYS.BALANCE, String(Math.max(0, toInt(n))));
-  }
+/* ----------
+   DEPOSIT (deposit.html)
+---------- */
+function initDeposit() {
+  // ✅ Requisito: usar jQuery para leer saldo, manejar submit, y mostrar mensajes
+  if (!window.jQuery) return;
 
-  function ensureInitialData() {
-    if (!localStorage.getItem(KEYS.BALANCE)) setBalance(60000);
+  const $ = window.jQuery;
+  const $balance = $("#depositBalance");
+  const $form = $("#depositForm");
+  const $amount = $("#depositAmount");
+  const $legend = $("#depositLegend");
+  const $alertContainer = $("#alert-container");
 
-    if (!localStorage.getItem(KEYS.CONTACTS)) {
-      const seed = [
-        { id: 'c1', name: 'John Doe', alias: 'john.doe', cbu: '123456789', bank: 'ABC Bank' },
-        { id: 'c2', name: 'Jane Smith', alias: 'jane.smith', cbu: '987654321', bank: 'XYZ Bank' }
-      ];
-      localStorage.setItem(KEYS.CONTACTS, JSON.stringify(seed));
-    }
+  // Mostrar saldo actual (desde Local Storage) con jQuery
+  $balance.text(formatCLP(getBalance()));
 
-    if (!localStorage.getItem(KEYS.TX)) {
-      const seedTx = [
-        { id: 't1', tipo: 'purchase', descripcion: 'Compra en línea', monto: 5000, fecha: new Date().toISOString() },
-        { id: 't2', tipo: 'deposit', descripcion: 'Depósito', monto: 10000, fecha: new Date().toISOString() },
-        { id: 't3', tipo: 'transfer_in', descripcion: 'Transferencia recibida', monto: 7500, fecha: new Date().toISOString() }
-      ];
-      localStorage.setItem(KEYS.TX, JSON.stringify(seedTx));
-    }
-  }
-
-  function showBootstrapAlert($container, type, message) {
-    const html = `
-      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+  function showDepositAlert(message, type) {
+    // Alerta Bootstrap creada y agregada con jQuery
+    const $alert = $(
+      `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
         ${message}
         <button type="button" class="close" data-dismiss="alert" aria-label="Cerrar">
           <span aria-hidden="true">&times;</span>
         </button>
-      </div>
-    `;
-    $container.html(html);
+      </div>`
+    );
+    $alertContainer.empty().append($alert);
   }
 
-  function isLoginPage() {
-    return $('#loginForm').length > 0;
-  }
+  $form.submit(function (e) {
+    e.preventDefault();
 
-  function requireLogin() {
-    const logged = localStorage.getItem(KEYS.LOGGED) === 'true';
-    if (!logged && !isLoginPage()) {
-      window.location.href = 'index.html';
-      return false;
+    const amount = toNumber($amount.val());
+    $alertContainer.empty();
+    $legend.text("");
+
+    if (!amount || amount <= 0) {
+      showDepositAlert("Ingresa un monto válido para depositar.", "danger");
+      return;
     }
-    return true;
-  }
 
-  function bindLogout() {
-    $(document).on('click', '.js-logout', function (e) {
-      e.preventDefault();
-      localStorage.removeItem(KEYS.LOGGED);
-      window.location.href = 'index.html';
+    const newBalance = getBalance() + amount;
+    setBalance(newBalance);
+
+    pushTransaction({
+      type: "deposit",
+      description: "Depósito",
+      amount: amount
+    });
+
+    // Actualizar UI con jQuery
+    $balance.text(formatCLP(newBalance));
+    $legend.text(`Depositaste ${formatCLP(amount)}.`);
+
+    showDepositAlert(`✅ Depósito realizado: <b>${formatCLP(amount)}</b>. Redirigiendo al menú...`, "success");
+
+    // Redirigir después de 2 segundos
+    setTimeout(() => {
+      window.location.href = "menu.html";
+    }, 2000);
+  });
+}
+
+/* ----------
+   SEND MONEY (sendmoney.html)
+---------- */
+function initSendMoney() {
+  // Balance
+  const balanceEl = document.getElementById("sendBalance");
+  if (balanceEl) balanceEl.textContent = formatCLP(getBalance());
+
+  // DOM refs
+  const contactListEl = document.getElementById("contactList");
+  const sendAlertArea = document.getElementById("sendAlertArea");
+  const newContactAlertArea = document.getElementById("newContactAlertArea");
+  const searchForm = document.getElementById("searchForm");
+  const searchInput = document.getElementById("searchContact");
+  const sendAmountInput = document.getElementById("sendAmount");
+  const btnSendMoney = document.getElementById("btnSendMoney");
+  const sendConfirm = document.getElementById("sendConfirm");
+
+  const modalEl = document.getElementById("modalNewContact");
+  const saveContactBtn = document.getElementById("saveContactBtn");
+  const newName = document.getElementById("newName");
+  const newAlias = document.getElementById("newAlias");
+  const newCbu = document.getElementById("newCbu");
+  const newBank = document.getElementById("newBank");
+  const newContactForm = document.getElementById("newContactForm");
+
+  // Limpia alertas dentro del modal al abrir/cerrar
+  if (window.jQuery && modalEl && newContactAlertArea) {
+    window.jQuery(modalEl).on("shown.bs.modal", () => {
+      newContactAlertArea.innerHTML = "";
+    });
+    window.jQuery(modalEl).on("hidden.bs.modal", () => {
+      newContactAlertArea.innerHTML = "";
     });
   }
 
-  function updateBalanceUI() {
-    const b = getBalance();
+  // State
+  let contacts = getStorageJSON("walletContacts", []);
+  if (!Array.isArray(contacts)) contacts = [];
 
-    // Menu
-    if ($('#menuBalance').length) $('#menuBalance').text(`$${formatCLP(b)}`);
-
-    // Deposit
-    if ($('#depositBalance').length) $('#depositBalance').text(`$${formatCLP(b)}`);
-
-    // Send money
-    if ($('#sendBalance').length) $('#sendBalance').text(`$${formatCLP(b)}`);
-
-    // Transactions
-    if ($('#txBalance').length) $('#txBalance').text(`$${formatCLP(b)}`);
+  // Default contacts if empty
+  if (contacts.length === 0) {
+    contacts = [
+      { id: 1, name: "John Doe", alias: "john.doe", cbu: "123456789", bank: "ABC Bank" },
+      { id: 2, name: "Jane Smith", alias: "jane.smith", cbu: "987654321", bank: "XYZ Bank" }
+    ];
+    setStorageJSON("walletContacts", contacts);
   }
 
-  function getContacts() {
-    try {
-      return JSON.parse(localStorage.getItem(KEYS.CONTACTS) || '[]');
-    } catch (e) {
-      return [];
-    }
-  }
+  let selectedContactId = null;
 
-  function setContacts(list) {
-    localStorage.setItem(KEYS.CONTACTS, JSON.stringify(list || []));
-  }
+  // ✅ Requisito: ocultar botón "Enviar dinero" hasta seleccionar un contacto
+  if (btnSendMoney) btnSendMoney.style.display = "none";
 
-  function addTransaction(tx) {
-    const list = getTransactions();
-    list.unshift(tx);
-    localStorage.setItem(KEYS.TX, JSON.stringify(list));
-  }
+  function renderContacts(list) {
+    if (!contactListEl) return;
 
-  function getTransactions() {
-    try {
-      return JSON.parse(localStorage.getItem(KEYS.TX) || '[]');
-    } catch (e) {
-      return [];
-    }
-  }
+    contactListEl.innerHTML = "";
 
-  function getTipoTransaccion(tipo) {
-    const t = String(tipo || '').toLowerCase();
-    if (t === 'purchase' || t === 'compra') return 'Compra';
-    if (t === 'deposit' || t === 'deposito' || t === 'depósito') return 'Depósito';
-    if (t === 'transfer_in' || t === 'transferencia_recibida') return 'Transferencia recibida';
-    if (t === 'transfer_out' || t === 'transferencia_enviada') return 'Transferencia enviada';
-    return 'Movimiento';
-  }
+    list.forEach((c) => {
+      const li = document.createElement("li");
+      li.className = "list-group-item";
+      li.style.cursor = "pointer";
+      li.dataset.contactId = String(c.id);
 
-  // ---------- Init ----------
-  ensureInitialData();
-  bindLogout();
-  if (!requireLogin()) return;
-  updateBalanceUI();
-
-  // ---------- LOGIN (index.html) ----------
-  if (isLoginPage()) {
-    // No mostrar botón de menú aquí: no existe en el HTML, perfecto.
-
-    $('#loginForm').on('submit', function (e) {
-      e.preventDefault();
-
-      const email = $('#email').val().trim();
-      const pass = $('#password').val().trim();
-      const $alert = $('#loginAlert');
-
-      // Credenciales demo
-      const ok = (email === 'demo@wallet.com' && pass === '1234');
-
-      if (!email || !pass) {
-        showBootstrapAlert($alert, 'danger', 'Completa correo y contraseña.');
-        return;
+      if (selectedContactId === c.id) {
+        li.classList.add("active");
       }
 
-      if (ok) {
-        localStorage.setItem(KEYS.LOGGED, 'true');
-        showBootstrapAlert($alert, 'success', '¡Inicio de sesión exitoso! Redirigiendo al menú…');
-        setTimeout(function () {
-          window.location.href = 'menu.html';
-        }, 1200);
-      } else {
-        showBootstrapAlert($alert, 'danger', 'Credenciales incorrectas. Intenta nuevamente.');
-      }
-    });
+      li.innerHTML = `
+        <div>
+          <strong>${c.name}</strong><br>
+          <small>CBU: ${c.cbu} | Alias: ${c.alias} | Banco: ${c.bank}</small>
+        </div>
+      `;
 
-    return; // evita que se ejecuten binds de otras pantallas
-  }
+      // ✅ Click select contact
+      li.addEventListener("click", () => {
+        selectedContactId = c.id;
 
-  // ---------- MENU (menu.html) ----------
-  // En este proyecto los botones del menú son #btnDeposit, #btnSend y #btnTx
-  if ($('#btnDeposit').length && $('#btnSend').length && $('#btnTx').length) {
-    function redirectWithMessage(screenName, url, alertType) {
-      showBootstrapAlert($('#menuAlertArea'), alertType, `Redirigiendo a <strong>${screenName}</strong>…`);
-      setTimeout(function () {
-        window.location.href = url;
-      }, 900);
-    }
+        // Remove active from all
+        contactListEl.querySelectorAll(".list-group-item").forEach((item) => item.classList.remove("active"));
+        // Add active to this
+        li.classList.add("active");
 
-    $('#btnDeposit').on('click', function (e) {
-      e.preventDefault();
-      redirectWithMessage('Depositar', 'deposit.html', 'success');
-    });
+        // Mostrar botón cuando hay contacto seleccionado
+        if (btnSendMoney) btnSendMoney.style.display = "block";
+	        if (sendConfirm) sendConfirm.innerHTML = "";
 
-    $('#btnSend').on('click', function (e) {
-      e.preventDefault();
-      redirectWithMessage('Enviar dinero', 'sendmoney.html', 'warning');
-    });
-
-    $('#btnTx').on('click', function (e) {
-      e.preventDefault();
-      redirectWithMessage('Últimos movimientos', 'transactions.html', 'info');
-    });
-  }
-
-  // ---------- DEPOSIT (deposit.html) ----------
-  if ($('#depositForm').length) {
-    $('#depositForm').on('submit', function (e) {
-      e.preventDefault();
-
-      const amount = toInt($('#depositAmount').val());
-      const $alerts = $('#alert-container');
-
-      if (!amount || amount <= 0) {
-        showBootstrapAlert($alerts, 'danger', 'Ingresa un monto válido para depositar.');
-        return;
-      }
-
-      const current = getBalance();
-      const newBalance = current + amount;
-      setBalance(newBalance);
-      updateBalanceUI();
-
-      $('#depositLegend').html(`<small class="text-success font-weight-bold">Depositaste: $${formatCLP(amount)}</small>`);
-      showBootstrapAlert($alerts, 'success', `Depósito realizado. Nuevo saldo: <strong>$${formatCLP(newBalance)}</strong>. Redirigiendo al menú…`);
-
-      addTransaction({
-        id: `dep_${Date.now()}`,
-        tipo: 'deposit',
-        descripcion: 'Depósito',
-        monto: amount,
-        fecha: new Date().toISOString()
+        showBootstrapAlert(sendAlertArea, `Contacto seleccionado: <b>${c.name}</b>`, "info");
       });
 
-      setTimeout(function () {
-        window.location.href = 'menu.html';
-      }, 2000);
+      contactListEl.appendChild(li);
     });
+
+    if (list.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "text-muted";
+      empty.textContent = "No se encontraron contactos.";
+      contactListEl.appendChild(empty);
+    }
   }
 
-  // ---------- SEND MONEY (sendmoney.html) ----------
-  if ($('#contactList').length && $('#btnSendMoney').length) {
-    let selectedContactId = null;
+  // Initial render
+  renderContacts(contacts);
 
-    function updateSendButtonVisibility() {
-      // Mantener el botón visible siempre.
-      // Si no hay selección, el envío se valida con alerta al hacer clic.
-      $('#btnSendMoney').removeClass('d-none').prop('disabled', false);
-    }
-
-    function renderContacts(list) {
-      const $ul = $('#contactList');
-      $ul.empty();
-
-      if (!list.length) {
-        $ul.html('<li class="list-group-item text-muted">No hay contactos. Agrega uno.</li>');
-        return;
-      }
-
-      list.forEach(function (c) {
-        const isSelected = c.id === selectedContactId;
-        // "js-contact-item" permite capturar el click incluso si el usuario
-        // hace click en elementos internos (strong/small/div).
-        const cls = isSelected ? 'list-group-item active js-contact-item' : 'list-group-item js-contact-item';
-        const textCls = isSelected ? '' : '';
-
-        const $li = $(
-          `<li class="${cls} js-contact-item" data-contact-id="${escapeHtml(c.id)}" role="button" tabindex="0" style="cursor:pointer;">
-            <div>
-              <strong>${escapeHtml(c.name)}</strong><br>
-              <small class="contact-details">CBU: ${escapeHtml(c.cbu)} | Alias: ${escapeHtml(c.alias)} | Banco: ${escapeHtml(c.bank)}</small>
-            </div>
-          </li>`
-        );
-
-        $ul.append($li);
-      });
-    }
-
-    function loadAndRenderContacts() {
-      renderContacts(getContacts());
-      updateSendButtonVisibility();
-    }
-
-    loadAndRenderContacts();
-
-    // Selección de contacto (solo items con data-contact-id)
-    function selectContactFromEl(el) {
-      selectedContactId = String($(el).data('contact-id') || '');
-      if (!selectedContactId) return;
-      $('#sendConfirm').empty();
-      $('#sendAlertArea').empty();
-      loadAndRenderContacts();
-    }
-
-    // Click sobre cualquier parte del item (delegado)
-    $(document).on('click', '#contactList li[data-contact-id]', function (e) {
+  // Search
+  if (searchForm) {
+    searchForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      e.stopPropagation();
-      selectContactFromEl(this);
-    });
+      const q = (searchInput?.value || "").trim().toLowerCase();
 
-    // Soporte teclado (Enter/Espacio)
-    $(document).on('keydown', '#contactList li[data-contact-id]', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        selectContactFromEl(this);
-      }
-    });
-
-    // Búsqueda
-    $('#searchForm').on('submit', function (e) {
-      e.preventDefault();
-      const q = ($('#searchContact').val() || '').trim().toLowerCase();
-      const all = getContacts();
       if (!q) {
-        loadAndRenderContacts();
+        renderContacts(contacts);
         return;
       }
-      const filtered = all.filter(c =>
-        (c.name || '').toLowerCase().includes(q) || (c.alias || '').toLowerCase().includes(q)
-      );
+
+      const filtered = contacts.filter((c) => {
+        return (
+          String(c.name).toLowerCase().includes(q) ||
+          String(c.alias).toLowerCase().includes(q)
+        );
+      });
+
       renderContacts(filtered);
-      // si el contacto seleccionado no está en el filtro, se oculta el botón
-      const ids = filtered.map(c => c.id);
-      if (!ids.includes(selectedContactId)) selectedContactId = null;
-      updateSendButtonVisibility();
     });
+  }
 
-    // Guardar contacto desde modal
-    $('#saveContactBtn').on('click', function () {
-      const name = ($('#newName').val() || '').trim();
-      const alias = ($('#newAlias').val() || '').trim();
-      const cbu = ($('#newCbu').val() || '').trim();
-      const bank = ($('#newBank').val() || '').trim();
+  // Save contact (modal)
+  if (saveContactBtn) {
+    saveContactBtn.addEventListener("click", () => {
+      const name = (newName?.value || "").trim();
+      const alias = (newAlias?.value || "").trim();
+      const cbu = (newCbu?.value || "").trim();
+      const bank = (newBank?.value || "").trim();
 
-      // Validaciones básicas
+      const modalAlertTarget = newContactAlertArea || sendAlertArea;
+      if (modalAlertTarget) modalAlertTarget.innerHTML = "";
+
+      // validations
       if (!name || !alias || !cbu || !bank) {
-        showBootstrapAlert($('#sendAlertArea'), 'danger', 'Completa todos los campos del nuevo contacto.');
+        showBootstrapAlert(modalAlertTarget, "Completa todos los campos del nuevo contacto.", "danger");
         return;
       }
-
       if (!/^\d{6,}$/.test(cbu)) {
-        showBootstrapAlert($('#sendAlertArea'), 'danger', 'CBU inválido: usa solo números (mínimo 6 dígitos).');
+        showBootstrapAlert(modalAlertTarget, "El CBU debe ser numérico y tener al menos 6 dígitos.", "danger");
         return;
       }
 
-      const list = getContacts();
       const newContact = {
-        id: `c_${Date.now()}`,
+        id: Date.now(),
         name,
         alias,
         cbu,
         bank
       };
-      list.push(newContact);
-      setContacts(list);
 
-      // cerrar modal (Bootstrap 4)
-      $('#modalNewContact').modal('hide');
+      contacts.push(newContact);
+      setStorageJSON("walletContacts", contacts);
 
-      // limpiar inputs
-      $('#newContactForm')[0].reset();
+      // Reset & close modal (Bootstrap 4 uses jQuery)
+      if (newContactForm) newContactForm.reset();
+      if (window.jQuery && modalEl) {
+        window.jQuery(modalEl).modal("hide");
+      }
 
-      // refrescar lista
-      selectedContactId = newContact.id;
-      loadAndRenderContacts();
-
-      showBootstrapAlert($('#sendAlertArea'), 'success', 'Contacto agregado correctamente.');
+      renderContacts(contacts);
+      showBootstrapAlert(sendAlertArea, `✅ Contacto agregado: <b>${name}</b>`, "success");
     });
+  }
 
-    // Enviar dinero
-    $('#btnSendMoney').on('click', function () {
-      const amount = toInt($('#sendAmount').val());
+  // Send money
+  if (btnSendMoney) {
+    btnSendMoney.addEventListener("click", () => {
+      const amount = toNumber(sendAmountInput?.value);
 
       if (!selectedContactId) {
-        showBootstrapAlert($('#sendAlertArea'), 'danger', 'Debes seleccionar un contacto antes de enviar dinero.');
+        showBootstrapAlert(sendAlertArea, "Debes seleccionar un contacto antes de enviar dinero.", "danger");
+        return;
+      }
+      if (!sendAmountInput || amount <= 0) {
+        showBootstrapAlert(sendAlertArea, "Ingresa un monto válido para enviar.", "danger");
         return;
       }
 
-      if (!amount || amount <= 0) {
-        showBootstrapAlert($('#sendAlertArea'), 'danger', 'Ingresa un monto válido para enviar.');
+      const contact = contacts.find((c) => c.id === selectedContactId);
+      if (!contact) {
+        showBootstrapAlert(sendAlertArea, "El contacto seleccionado no existe. Vuelve a seleccionar.", "danger");
+        selectedContactId = null;
+        renderContacts(contacts);
         return;
       }
 
-      const current = getBalance();
-      if (amount > current) {
-        showBootstrapAlert($('#sendAlertArea'), 'danger', `Saldo insuficiente. Tu saldo actual es <strong>$${formatCLP(current)}</strong>.`);
+      const balance = getBalance();
+      if (amount > balance) {
+        showBootstrapAlert(sendAlertArea, "Saldo insuficiente para realizar esta transferencia.", "danger");
         return;
       }
 
-      const contact = getContacts().find(c => c.id === selectedContactId);
-      const newBalance = current - amount;
+      const newBalance = balance - amount;
       setBalance(newBalance);
-      updateBalanceUI();
+      if (balanceEl) balanceEl.textContent = formatCLP(newBalance);
 
-      addTransaction({
-        id: `tr_${Date.now()}`,
-        tipo: 'transfer_out',
-        descripcion: `Transferencia enviada a ${contact ? contact.name : 'contacto'}`,
-        monto: amount,
-        fecha: new Date().toISOString()
+      pushTransaction({
+        type: "send",
+        description: `Envío a ${contact.name}`,
+        amount: -amount,
+        meta: { to: contact }
       });
 
-      showBootstrapAlert($('#sendAlertArea'), 'success', `Envío realizado con éxito. Nuevo saldo: <strong>$${formatCLP(newBalance)}</strong>.`);
-      $('#sendConfirm').html(`<small class="text-success font-weight-bold">Enviastre $${formatCLP(amount)} ${contact ? 'a ' + contact.name : ''}.</small>`);
+      showBootstrapAlert(
+        sendConfirm || sendAlertArea,
+        `✅ Envío realizado a <b>${contact.name}</b> por <b>${formatCLP(amount)}</b>.`,
+        "success"
+      );
 
-      // opcional: limpiar monto
-      $('#sendAmount').val('');
+      // Clean inputs
+      if (sendAmountInput) sendAmountInput.value = "";
+
+      // Optional: redirect after a bit
+      setTimeout(() => {
+        window.location.href = "menu.html";
+      }, 1500);
     });
   }
+}
 
-  // ---------- TRANSACTIONS (transactions.html) ----------
-  if ($('#txList').length) {
-    function mostrarUltimosMovimientos(filtro) {
-      const list = getTransactions();
-      const f = (filtro || 'all').toLowerCase();
+/* ----------
+   TRANSACTIONS (transactions.html)
+---------- */
+function initTransactions() {
+  // ✅ Requisitos: listaTransacciones + filtro + funciones mostrarUltimosMovimientos() y getTipoTransaccion()
+  if (!window.jQuery) return;
 
-      const filtered = list.filter(function (tx) {
-        const tipo = String(tx.tipo || tx.type || '').toLowerCase();
-        if (f === 'all') return true;
-        if (f === 'compra') return tipo === 'purchase' || tipo === 'compra';
-        if (f === 'deposito' || f === 'depósito') return tipo === 'deposit' || tipo === 'deposito' || tipo === 'depósito';
-        if (f === 'transferencia') return tipo === 'transfer_in' || tipo === 'transferencia_recibida' || tipo === 'transfer_out' || tipo === 'transferencia_enviada';
-        if (f === 'transferencia_recibida') return tipo === 'transfer_in' || tipo === 'transferencia_recibida';
-        // fallback
-        return true;
-      });
+  const $balanceEl = window.jQuery("#transactionsBalance");
+  const $listEl = window.jQuery("#transactionsList");
+  const $filterEl = window.jQuery("#filterType");
+  const $emptyEl = window.jQuery("#transactionsEmpty");
 
-      const $ul = $('#txList');
-      $ul.empty();
+  // Saldo actual
+  $balanceEl.text(formatCLP(getBalance()));
 
-      if (!filtered.length) {
-        $ul.html('<li class="list-group-item text-muted">No hay movimientos para este filtro.</li>');
-        return;
-      }
+  // Lista ficticia (si no hay movimientos reales en localStorage)
+  const listaTransaccionesFicticia = [
+    { type: "buy", description: "Compra en línea", amount: -5000 },
+    { type: "deposit", description: "Depósito", amount: 25000 },
+    { type: "receive", description: "Transferencia recibida", amount: 12000 }
+  ];
 
-      filtered.slice(0, 20).forEach(function (tx) {
-        const tipoLabel = getTipoTransaccion(tx.tipo || tx.type);
-        const monto = toInt(tx.monto || tx.amount);
-        const desc = tx.descripcion || tx.desc || tipoLabel;
+  // Lista real desde Local Storage
+  const listaTransaccionesReal = getStorageJSON("walletTransactions", []);
 
-        const sign = (String(tx.tipo || tx.type).toLowerCase() === 'deposit' || String(tx.tipo || tx.type).toLowerCase() === 'transfer_in') ? '+' : '-';
-        const money = `${sign}$${formatCLP(monto)}`;
+  // ✅ Requisito: reemplazar ficticia por real (si existe)
+  const listaTransacciones = Array.isArray(listaTransaccionesReal) && listaTransaccionesReal.length > 0
+    ? listaTransaccionesReal
+    : listaTransaccionesFicticia;
 
-        const $li = $(
-          `<li class="list-group-item d-flex justify-content-between align-items-center">
-             <div>
-               <strong>${desc}</strong><br>
-               <small class="text-muted">${tipoLabel}</small>
-             </div>
-             <strong>${money}</strong>
-           </li>`
-        );
-        $ul.append($li);
-      });
+  function getTipoTransaccion(tipo) {
+    if (tipo === "deposit") return "Depósito";
+    if (tipo === "buy") return "Compra";
+    if (tipo === "receive") return "Transferencia recibida";
+    if (tipo === "send") return "Transferencia enviada";
+    return "Movimiento";
+  }
+
+  function mostrarUltimosMovimientos(filtro) {
+    $listEl.html("");
+
+    const filtradas = (!filtro || filtro === "all")
+      ? listaTransacciones
+      : listaTransacciones.filter((t) => t.type === filtro);
+
+    if (filtradas.length === 0) {
+      $emptyEl.show();
+      return;
     }
 
-    // Cargar inicial
-    mostrarUltimosMovimientos($('#txFilter').val() || 'all');
+    $emptyEl.hide();
 
-    // Cambio filtro
-    $('#txFilter').on('change', function () {
-      mostrarUltimosMovimientos($(this).val());
+    filtradas.slice(0, 30).forEach((t) => {
+      const amount = toNumber(t.amount);
+      const badge = amount >= 0 ? "success" : "danger";
+      const sign = amount >= 0 ? "+" : "-";
+      const abs = Math.abs(amount);
+
+      const $li = window.jQuery("<li>")
+        .addClass("list-group-item d-flex justify-content-between align-items-center")
+        .html(`
+          <div>
+            <div class="font-weight-bold">${getTipoTransaccion(t.type)}</div>
+            <small class="text-muted">${t.description || ""}</small>
+          </div>
+          <span class="badge badge-${badge} badge-pill">${sign}${formatCLP(abs)}</span>
+        `);
+
+      $listEl.append($li);
     });
   }
-});
+
+  // Inicial
+  mostrarUltimosMovimientos("all");
+
+  // ✅ Requisito: filtrar con jQuery
+  $filterEl.on("change", function () {
+    mostrarUltimosMovimientos(this.value);
+  });
+}

@@ -1,18 +1,13 @@
-/* ===== Base ===== */
 body{
   font-family: "Work Sans", sans-serif !important;
   background: #11111a;
 }
-
-/* Contenedor tipo "telefono" */
 .wallet-shell{
   max-width: 420px;
   margin: 0 auto;
   min-height: 100vh;
   padding: 0;
 }
-
-/* Header morado */
 .wallet-header{
   background: -webkit-linear-gradient(360deg, #6e3c9a, #451d67);
   background: linear-gradient(360deg, #6e3c9a, #451d67);
@@ -24,7 +19,6 @@ body{
   border-bottom-right-radius: 22px;
 }
 
-/* Botones icono (izq / der) */
 .wallet-icon-btn{
   width: 44px;
   height: 44px;
@@ -44,7 +38,6 @@ body{
   text-decoration: none;
 }
 
-/* Avatar */
 .wallet-avatar{
   width: 100px;
   height: 100px;
@@ -52,9 +45,15 @@ body{
   object-fit: cover;
   border: 4px solid rgba(255,255,255,.25);
   background: rgba(255,255,255,.15);
+  cursor: pointer;
 }
 
-/* Títulos */
+.wallet-icon-lg{ font-size: 1.3rem; }
+.rounded-18{ border-radius: 18px !important; }
+.opacity-85{ opacity: .85; }
+
+.is-hidden{ display: none; }
+
 .wallet-title{
   font-weight: 600;
   font-size: 28px;
@@ -76,7 +75,6 @@ body{
   margin-top: 6px;
 }
 
-/* Card blanca inferior */
 .wallet-card{
   background: #fff;
   border-top-left-radius: 30px;
@@ -89,14 +87,12 @@ body{
   z-index: 2;
 }
 
-/* Menú desplegable dentro de la card */
 .wallet-menu-inner{
   background: rgba(17,17,26,.04);
   border-radius: 18px;
   padding: 12px 14px;
 }
 
-/* (Si en algún momento usas la versión antigua) */
 .wallet-menu-card{
   background: #fff;
   border-top-left-radius: 30px;
@@ -117,7 +113,6 @@ body{
   margin-right: 10px;
 }
 
-/* Botones principales */
 .wallet-action{
   border-radius: 16px;
   padding: 14px 14px;
@@ -129,7 +124,6 @@ body{
   filter: brightness(.95);
 }
 
-/* Texto dentro de la card */
 .wallet-card h2,
 .wallet-card h3,
 .wallet-card label,
@@ -138,7 +132,6 @@ body{
   color: #11111a;
 }
 
-/* Chip */
 .wallet-chip{
   display: inline-block;
   padding: 8px 12px;
@@ -147,7 +140,6 @@ body{
   font-weight: 600;
 }
 
-/* ===== Login ===== */
 .login-screen{
   background: linear-gradient(360deg, #6e3c9a, #451d67);
   min-height: 100vh;
@@ -168,7 +160,6 @@ body{
   letter-spacing: .2px;
 }
 
-/* Tu HTML usa login-h1 en el h2 */
 .login-h1{
   font-weight: 500;
   font-size: 22px;
@@ -222,7 +213,6 @@ body{
   color: #fff;
 }
 
-/* ===== SendMoney: contacto seleccionado (evita azul Bootstrap) ===== */
 #contactList .list-group-item{
   border-radius: 14px;
   margin-bottom: 10px;
@@ -247,7 +237,6 @@ body{
   color: #11111a !important;
 }
 
-/* ===== Extra: animación hamburguesa + micro UX ===== */
 .wallet-icon-btn .bi-list{
   transition: transform .22s ease;
 }
@@ -255,12 +244,10 @@ body{
   transform: rotate(90deg) scale(1.05);
 }
 
-/* Pequeño respiro cuando el menú está abierto */
 #walletNav.collapse.show{
   margin-bottom: 14px;
 }
 
-/* ===== Transactions ===== */
 .tx-amount{ font-weight: 700; }
 .tx-amount.tx-in{ color: #1e7e34; }
 .tx-amount.tx-out{ color: #c82333; }
