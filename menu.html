@@ -1,101 +1,49 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wallet - Menú</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Wallet - Menú Principal</title>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="styles.css" rel="stylesheet">
 </head>
-
-<body>
-  <div class="wallet-shell">
-
-    <header class="wallet-header">
-      <div class="d-flex align-items-center justify-content-between">
-        <a class="wallet-icon-btn" href="index.html" aria-label="Volver">
-          <i class="bi bi-chevron-left"></i>
-        </a>
-
-        <a href="menu.html" aria-label="Ir al menú principal">
-          <img
-          src="https://somosplaneador.cl/wp-content/uploads/2026/01/gati-1.png"
-          alt="Logo de app gatito con billetera"
-          class="wallet-avatar"
-              referrerpolicy="no-referrer">
-        </a>
-<button class="wallet-icon-btn" type="button"
-          data-toggle="collapse" data-target="#walletNav"
-          aria-controls="walletNav" aria-expanded="false" aria-label="Abrir menú">
-          <i class="bi bi-list wallet-icon-lg"></i>
-        </button>
-      </div>
-
-      <div class="text-center">
-        <h2 class="wallet-title">Menú principal</h2>
-        <p class="wallet-subtitle">Saldo disponible</p>
-        <div class="wallet-balance" id="menuBalance">$0</div>
-      </div>
-    </header>
-
-    <main class="wallet-card">
-
-      <div class="collapse" id="walletNav">
-        <div class="wallet-menu-inner mb-3">
-          <ul class="navbar-nav">
-            <li class="nav-item">
-              <a class="nav-link" href="menu.html"><i class="bi bi-house-door"></i> Menú principal</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="deposit.html"><i class="bi bi-plus-circle"></i> Depositar</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="sendmoney.html"><i class="bi bi-send"></i> Enviar dinero</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="transactions.html"><i class="bi bi-receipt"></i> Últimos Movimientos</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link js-logout" href="#"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div id="menuAlertArea" class="mb-3"></div>
-
-      <div class="mb-3">
-        <span class="wallet-chip">Acciones rápidas</span>
-      </div>
-
-      <a href="deposit.html" id="btnDeposit" class="btn btn-success btn-block wallet-action mb-3">
-        <i class="bi bi-plus-circle mr-2"></i> Depositar
-      </a>
-
-      <a href="sendmoney.html" id="btnSend" class="btn btn-warning btn-block wallet-action mb-3">
-        <i class="bi bi-send mr-2"></i> Enviar dinero
-      </a>
-
-      <a href="transactions.html" id="btnTx" class="btn btn-info btn-block wallet-action mb-4">
-        <i class="bi bi-receipt mr-2"></i> Últimos Movimientos
-      </a>
-
-      <a href="#" class="btn btn-outline-dark btn-block wallet-action js-logout">
-        <i class="bi bi-box-arrow-right mr-2"></i> Cerrar sesión
-      </a>
-    </main>
-
-  </div>
-
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-  <script src="script.js"></script>
-</body>
+<body class="wallet-bg">
+<main class="container d-flex justify-content-center align-items-center min-vh-100 py-4">
+<section class="wallet-shell w-100">
+      
+<div class="wallet-logo mx-auto mb-3">
+<img alt="Logo de app gatito con billetera" class="wallet-avatar" referrerpolicy="no-referrer" src="https://somosplaneador.cl/wp-content/uploads/2026/01/gati-1.png"/>
+</div>
+<h2 class="wallet-subtitle text-center mb-4">Menú Principal</h2>
+<div class="wallet-balance-box mb-3">
+<div class="d-flex align-items-center justify-content-between">
+<div>
+<div class="wallet-balance-label">Dinero en cuenta</div>
+<div class="wallet-balance-amount" id="menuBalance">$0</div>
+</div>
+<div class="wallet-balance-icon">
+<i class="bi bi-wallet2"></i>
+</div>
+</div>
+</div>
+<div class="text-center mb-3" id="menuAlertArea" style="min-height: 1.2rem; opacity:.9;"></div>
+<button class="btn wallet-btn btn-block mb-3 btn-success" id="btnDeposit" type="button">
+<i class="bi bi-plus-circle"></i> Depositar
+      </button>
+<button class="btn wallet-btn btn-block mb-3 btn-warning" id="btnSend" type="button">
+<i class="bi bi-send"></i> Enviar Dinero
+      </button>
+<button class="btn wallet-btn btn-block btn-primary" id="btnTx" type="button">
+<i class="bi bi-clock-history"></i> Últimos Movimientos
+      </button>
+<button class="btn btn-link btn-block mt-3 js-logout" id="btnLogout" style="color: rgba(255,255,255,.85);" type="button">
+Cerrar sesión
+      </button>
+</section>
+</main>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="script.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script><script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script></body>
 </html>

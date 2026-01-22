@@ -5,95 +5,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wallet - Últimos Movimientos</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 
-<body>
-  <div class="wallet-shell">
+<body class="wallet-bg">
+  <main class="container d-flex justify-content-center align-items-center min-vh-100 py-4">
+    <section class="wallet-shell w-100">
 
-    <header class="wallet-header">
-      <div class="d-flex align-items-center justify-content-between">
-        <a class="wallet-icon-btn" href="menu.html" aria-label="Volver al menú">
-          <i class="bi bi-chevron-left"></i>
-        </a>
+        <div class="d-flex align-items-center justify-content-between mb-3">
 
-        <a href="menu.html" aria-label="Ir al menú principal">
-          <img
-          src="https://somosplaneador.cl/wp-content/uploads/2026/01/gati-1.png"
-          alt="Logo de app gatito con billetera"
-          class="wallet-avatar"
-              referrerpolicy="no-referrer">
-        </a>
-<button class="wallet-icon-btn" type="button"
-          data-toggle="collapse" data-target="#walletNav"
-          aria-controls="walletNav" aria-expanded="false" aria-label="Abrir menú">
-          <i class="bi bi-list wallet-icon-lg"></i>
-        </button>
-      </div>
+          <a class="wallet-icon-btn" href="menu.html" aria-label="Volver al menú">
+            <i class="bi bi-arrow-left-circle"></i>
+          </a>
 
-      <div class="text-center">
-        <h2 class="wallet-title">Últimos Movimientos</h2>
-        <p class="wallet-subtitle">Tu saldo actual</p>
-        <div class="wallet-balance" id="transactionsBalance">$0</div>
-      </div>
-    </header>
+       
+          <a href="menu.html" aria-label="Ir al menú principal" class="d-flex justify-content-center">
+            <img
+              src="https://somosplaneador.cl/wp-content/uploads/2026/01/gati-1.png"
+              alt="Logo de app gatito con billetera"
+              class="wallet-avatar"
+              referrerpolicy="no-referrer"
+            />
+          </a>
 
-    <main class="wallet-card">
-
-      <div class="collapse" id="walletNav">
-        <div class="wallet-menu-inner mb-3">
-          <ul class="navbar-nav">
-            <li class="nav-item">
-              <a class="nav-link" href="menu.html"><i class="bi bi-house-door"></i> Menú principal</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="deposit.html"><i class="bi bi-plus-circle"></i> Depositar</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="sendmoney.html"><i class="bi bi-send"></i> Enviar dinero</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="transactions.html"><i class="bi bi-receipt"></i> Movimientos</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link js-logout" href="#"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a>
-            </li>
-          </ul>
+          <span style="width: 40px;"></span>
         </div>
-      </div>
 
-      <div class="mb-3 d-flex align-items-center justify-content-between">
-        <span class="wallet-chip">Movimientos</span>
-        
-      </div>
+      <h2 class="wallet-subtitle text-center mb-2">Últimos Movimientos</h2>
+      <div class="wallet-balance-box mb-3">
+<div class="d-flex align-items-center justify-content-between">
+<div>
+<div class="wallet-balance-label">Dinero en cuenta</div>
+<div class="wallet-balance-amount" id="menuBalance">$56.716</div>
+</div>
+<div class="wallet-balance-icon">
+<i class="bi bi-wallet2"></i>
+</div>
+</div>
+</div>
 
       <div class="form-group">
-        <label for="filterType" class="font-weight-bold">Filtrar por tipo</label>
-        <select id="filterType" class="form-control">
+        <label class="wallet-label" for="filterType">Filtrar por tipo</label>
+        <select class="form-control" id="filterType">
           <option value="all" selected>Todos</option>
           <option value="buy">Compra</option>
           <option value="deposit">Depósito</option>
+          <option value="withdraw">Retiro</option>
           <option value="receive">Transferencia recibida</option>
           <option value="send">Transferencia enviada</option>
         </select>
       </div>
 
-      <div id="transactionsEmpty" class="text-muted is-hidden">No hay movimientos aún.</div>
+      <div id="transactionsEmpty" class="text-white-50 is-hidden mb-2">No hay movimientos aún.</div>
 
-      <ul id="transactionsList" class="list-group mb-4"></ul>
+      <ul class="list-group mb-4" id="transactionsList"></ul>
 
-      <a href="menu.html" class="btn btn-outline-dark btn-block wallet-action">
-        <i class="bi bi-chevron-left mr-2"></i> Volver al Menú
-      </a>
+      <a href="menu.html" class="btn btn-outline-light btn-block">Volver al Menú</a>
 
-    </main>
-  </div>
+    </section>
+  </main>
 
   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
