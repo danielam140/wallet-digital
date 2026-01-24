@@ -17,7 +17,9 @@ function getJSON(key, fallback) {
   } catch (e) {
     return fallback;
   }
+
 }
+
 
 function setJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
