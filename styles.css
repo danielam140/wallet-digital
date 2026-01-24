@@ -94,6 +94,28 @@ h5#modalNewContactTitle
 }
 
 
+.wallet-avatar-circle {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  border: 10px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wallet-avatar-img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+}
+
+.modal-header {
+    color: black;
+}
+
+
 .form-group {
     margin-bottom: 1rem;
     color: black;

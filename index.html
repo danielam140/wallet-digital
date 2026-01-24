@@ -1,94 +1,90 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Wallet - Login</title>
+  <title>Wallet - Enviar / Recibir</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@100..900&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
+<body class="wallet-bg">
+  <main class="container d-flex justify-content-center align-items-center min-vh-100 py-4">
+    <section class="wallet-shell w-100 login-screen">
 
-<body>
-  <div class="wallet-shell login-screen">
-    <div class="login-content text-white">
-      <div class="text-center mb-4">
-        <img
-          alt="Logo de app gatito con billetera"
-          class="wallet-avatar"
-          referrerpolicy="no-referrer"
-          src="https://somosplaneador.cl/wp-content/uploads/2026/01/gati-1.png"
-        >
-        <h1 class="login-title mt-3 mb-1">Wallet</h1>
+      <div class="login-content text-white">
+        <div class="text-center mb-4">
+          <div class="wallet-avatar-circle">
+  <img
+    src="https://somosplaneador.cl/wp-content/uploads/2026/01/gati-1.png"
+    class="wallet-avatar-img"
+    alt="Logo gatito"
+  />
+</div>
+          <h1 class="login-title mt-3 mb-1">Wallet</h1>
+        </div>
+
+        <h2 class="login-h1 text-center mb-4">Iniciar sesión</h2>
+
+        <div class="mb-3" id="loginAlert"></div>
+
+        <form class="login-form" id="loginForm" novalidate>
+          <div class="form-group">
+            <label class="login-label" for="email">Correo electrónico</label>
+            <div class="input-group input-group-lg">
+              <div class="input-group-prepend">
+                <span class="input-group-text login-addon">
+                  <i class="bi bi-envelope"></i>
+                </span>
+              </div>
+              <input
+                type="email"
+                autocomplete="email"
+                class="form-control login-input"
+                id="email"
+                placeholder="Ingresa tu correo"
+                required
+              >
+            </div>
+          </div>
+
+          <div class="form-group mt-4">
+            <label class="login-label" for="password">Contraseña</label>
+            <div class="input-group input-group-lg">
+              <div class="input-group-prepend">
+                <span class="input-group-text login-addon">
+                  <i class="bi bi-lock"></i>
+                </span>
+              </div>
+              <input
+                type="password"
+                autocomplete="current-password"
+                class="form-control login-input"
+                id="password"
+                placeholder="Ingresa tu contraseña"
+                required
+              >
+            </div>
+          </div>
+
+          <button class="btn btn-warning btn-block login-btn mt-4" type="submit">
+            Iniciar sesión
+          </button>
+
+          
+
+          <small class="d-block text-center mt-3 opacity-85">
+            Demo: <strong>demo@wallet.com</strong> / <strong>1234</strong>
+          </small>
+        </form>
       </div>
 
-      <h2 class="login-h1 text-center mb-4">Iniciar sesión</h2>
-
-      <!-- alertas bootstrap -->
-      <div class="mb-3" id="loginAlert"></div>
-
-      <form class="login-form" id="loginForm" novalidate>
-        <div class="form-group">
-          <label class="login-label" for="email">Correo electrónico</label>
-          <div class="input-group input-group-lg">
-            <div class="input-group-prepend">
-              <span class="input-group-text login-addon">
-                <i class="bi bi-envelope"></i>
-              </span>
-            </div>
-            <input
-              type="email"
-              autocomplete="email"
-              class="form-control login-input"
-              id="email"
-              placeholder="Ingresa tu correo"
-              required
-            >
-          </div>
-        </div>
-
-        <div class="form-group mt-4">
-          <label class="login-label" for="password">Contraseña</label>
-          <div class="input-group input-group-lg">
-            <div class="input-group-prepend">
-              <span class="input-group-text login-addon">
-                <i class="bi bi-lock"></i>
-              </span>
-            </div>
-            <input
-              type="password"
-              autocomplete="current-password"
-              class="form-control login-input"
-              id="password"
-              placeholder="Ingresa tu contraseña"
-              required
-            >
-          </div>
-        </div>
-
-        <button class="btn btn-warning btn-block login-btn mt-4" type="submit">
-          Iniciar sesión
-        </button>
-
-        <a class="d-block text-center mt-3 login-link" href="#">
-          ¿Olvidaste tu contraseña?
-        </a>
-
-        <small class="d-block text-center mt-3 opacity-85">
-          Demo: <strong>demo@wallet.com</strong> / <strong>1234</strong>
-        </small>
-      </form>
-    </div>
-  </div>
+    </section>
+  </main>
 
   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script src="script.js"></script>
 </body>
-</html>
